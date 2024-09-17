@@ -1,3 +1,5 @@
-import { IUser } from '../interfaces/IUser'
+import { IUser } from './IUser'
+import { IChat } from './IChat'
+import { IMessage } from './IMessage'
 
-export { IUser }
+export { IUser, IChat, IMessage }

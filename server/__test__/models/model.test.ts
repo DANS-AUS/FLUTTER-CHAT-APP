@@ -1,7 +1,7 @@
 import { HydratedDocument, Types } from 'mongoose'
 import { serverConnect, serverDisconnect } from '../../db/testConfig'
-import { IUser } from '../../src/interfaces'
-import { User } from '../../src/models'
+import { IUser, IChat, IMessage } from '../../src/interfaces'
+import { User, Chat, Message } from '../../src/models'
 
 beforeAll(async () => {
   await serverConnect()
@@ -11,19 +11,21 @@ afterAll(async () => {
   await serverDisconnect()
 })
 
+const userOneID = new Types.ObjectId()
+const userTwoID = new Types.ObjectId()
+const newChatId = new Types.ObjectId()
+
+const testUserOne: IUser = {
+  authId: 'a1b2c3',
+  username: 'testUserOne'
+}
+
+const testUserTwo: IUser = {
+  authId: 'd4e5f6',
+  username: 'testUserTwo'
+}
+
 describe('User model', () => {
-  const userOneID = new Types.ObjectId()
-  const userTwoID = new Types.ObjectId()
-
-  const testUserOne: IUser = {
-    authId: 'a1b2c3',
-    username: 'testUserOne'
-  }
-
-  const testUserTwo: IUser = {
-    authId: 'd4e5f6',
-    username: 'testUserTwo'
-  }
   test('should create a user', async () => {
     const [newUserOne, newUserTwo]: HydratedDocument<IUser>[] =
       await User.create([
@@ -68,5 +70,51 @@ describe('User model', () => {
     expect(userTwoWithFriendDetails?.friends).toMatchObject([
       userOneWithFriendId
     ])
+  })
+})
+
+describe('Chat model', () => {
+  test('should create a chat', async () => {
+    const newChat: HydratedDocument<IChat> = await Chat.create({
+      _id: newChatId,
+      receivers: [userOneID, userTwoID]
+    })
+
+    expect(newChat).toBeInstanceOf(Chat)
+    expect(newChat.receivers).toMatchObject([userOneID, userTwoID])
+  })
+
+  test('should allow for addition of chat name', async () => {
+    const chatWithoutName = await Chat.findByIdAndUpdate(newChatId, {
+      chatName: 'test chat'
+    })
+
+    const chatWithName = await Chat.findById(chatWithoutName?._id)
+    expect(chatWithName).toHaveProperty('chatName', 'test chat')
+  })
+})
+
+describe('Message model', () => {
+  test('should create a message in a chat', async () => {
+    const messageInterface: IMessage = {
+      sender: userOneID,
+      message: 'This is a test message!',
+      chatId: newChatId
+    }
+
+    const newMessage: HydratedDocument<IMessage> = await Message.create(
+      messageInterface
+    )
+
+    const chatToUpdate = await Chat.findByIdAndUpdate(newChatId, {
+      $push: { messages: newMessage._id }
+    })
+
+    const chatWithMessage = await Chat.findById(chatToUpdate?._id).populate(
+      'messages'
+    )
+
+    expect(newMessage).toHaveProperty('sender', userOneID)
+    expect(chatWithMessage?.messages.length).toBe(1)
   })
 })
