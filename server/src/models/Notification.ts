@@ -4,7 +4,6 @@ import { INotification } from '../interfaces'
 
 export const notificationSchema = new Schema<INotification>(
   {
-    title: { type: String },
     notificationType: {
       type: Number,
       enum: [1],

@@ -122,7 +122,6 @@ describe('Message model', () => {
 describe('Notification model', () => {
   test('should create a notification', async () => {
     const notificationInterface: INotification = {
-      title: 'this is a test notification',
       notificationType: 1,
       to: userOneID,
       from: userTwoID,
