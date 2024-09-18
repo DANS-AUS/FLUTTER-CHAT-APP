@@ -1,7 +1,7 @@
 import { HydratedDocument, Types } from 'mongoose'
 import { serverConnect, serverDisconnect } from '../../db/testConfig'
-import { IUser, IChat, IMessage } from '../../src/interfaces'
-import { User, Chat, Message } from '../../src/models'
+import { IUser, IChat, IMessage, INotification } from '../../src/interfaces'
+import { User, Chat, Message, Notification } from '../../src/models'
 
 beforeAll(async () => {
   await serverConnect()
@@ -117,4 +117,24 @@ describe('Message model', () => {
     expect(newMessage).toHaveProperty('sender', userOneID)
     expect(chatWithMessage?.messages.length).toBe(1)
   })
+})
+
+describe('Notification model', () => {
+  test('should create a notification', async () => {
+    const notificationInterface: INotification = {
+      title: 'this is a test notification',
+      notificationType: 1,
+      to: userOneID,
+      from: userTwoID,
+      resolved: false
+    }
+
+    const newNotification: HydratedDocument<INotification> =
+      await Notification.create(notificationInterface)
+
+    expect(newNotification).toBeInstanceOf(Notification)
+    expect(newNotification).toMatchObject(notificationInterface)
+  })
+  // TODO: Implement this test
+  // test('should push a notification to the specified user', async() => {})
 })
