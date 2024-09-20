@@ -1,10 +1,5 @@
 import { Types } from 'mongoose'
 
-// TODO: Edit the following fields:
-// [ ] Add:
-// [X] pendingFriends: Types.ObjectId
-// [X] notifications: Types.ObjectId
-// [X] newUser: Bool (default true)
 export interface IUser {
   authId: string
   username?: string
@@ -13,6 +8,8 @@ export interface IUser {
   avatar?: string
   friends?: Types.ObjectId[]
   pendingFriends?: Types.ObjectId[]
+  chats?: Types.ObjectId[]
+  pendingChats?: Types.ObjectId[]
   notifications?: Types.ObjectId[]
   newUser?: boolean
 }

@@ -3,6 +3,8 @@ import { serverConnect, serverDisconnect } from '../../db/testConfig'
 import { IUser, IChat, IMessage, INotification } from '../../src/interfaces'
 import { User, Chat, Message, Notification } from '../../src/models'
 
+// TODO: Update tests for new fields.
+
 beforeAll(async () => {
   await serverConnect()
 })
@@ -77,6 +79,7 @@ describe('Chat model', () => {
   test('should create a chat', async () => {
     const newChat: HydratedDocument<IChat> = await Chat.create({
       _id: newChatId,
+      owner: userOneID,
       receivers: [userOneID, userTwoID]
     })
 
@@ -120,6 +123,8 @@ describe('Message model', () => {
 })
 
 describe('Notification model', () => {
+  const notificationID = new Types.ObjectId()
+
   test('should create a notification', async () => {
     const notificationInterface: INotification = {
       notificationType: 1,
@@ -129,11 +134,29 @@ describe('Notification model', () => {
     }
 
     const newNotification: HydratedDocument<INotification> =
-      await Notification.create(notificationInterface)
+      await Notification.create({
+        _id: notificationID,
+        ...notificationInterface
+      })
 
     expect(newNotification).toBeInstanceOf(Notification)
     expect(newNotification).toMatchObject(notificationInterface)
   })
-  // TODO: Implement this test
-  // test('should push a notification to the specified user', async() => {})
+
+  // Is out of order because the users are already friends
+  // but notification would be sent first in order for the users to become friends.
+  test('should push a notification to the specified user', async () => {
+    await User.findByIdAndUpdate(userTwoID, {
+      $push: { notifications: notificationID }
+    })
+
+    const userWithNotification = await User.findById(userTwoID).populate(
+      'notifications'
+    )
+
+    const notification = await Notification.findById(notificationID)
+
+    expect(userWithNotification?.notifications).toHaveLength(1)
+    expect(userWithNotification?.notifications).toMatchObject([notification])
+  })
 })

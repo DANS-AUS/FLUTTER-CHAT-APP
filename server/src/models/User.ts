@@ -20,6 +20,18 @@ export const userSchema = new Schema<IUser>(
         ref: 'User'
       }
     ],
+    chats: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Chat'
+      }
+    ],
+    pendingChats: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Chat'
+      }
+    ],
     notifications: [
       {
         type: Schema.Types.ObjectId,
