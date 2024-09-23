@@ -1,5 +1,5 @@
 import request from 'supertest'
-import { NextFunction, Request, response, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { Types } from 'mongoose'
 import app from '../../src/app'
 import { serverConnect, serverDisconnect } from '../../db/testConfig'
@@ -13,31 +13,42 @@ jest.mock('express-oauth2-jwt-bearer', () => ({
   })
 }))
 
+// IDs for quick access.
 const userOneID = new Types.ObjectId()
 const userTwoID = new Types.ObjectId()
+const userThreeID = new Types.ObjectId()
 const chatID = new Types.ObjectId()
 const messageOneID = new Types.ObjectId()
 
 // Set up in-memory db before each test.
 beforeAll(async () => {
   await serverConnect()
-  // TODO:
-  // Create 2 users
+
+  // Create mock data in the db.
+  /* USERS */
   await User.create(
     {
       _id: userOneID,
       authId: 'a1b2c3',
       username: 'test user one',
+      friends: [userTwoID, userThreeID],
       chats: [chatID]
     },
     {
       _id: userTwoID,
       authId: 'd4e5f6',
       username: 'test user two',
+      friends: [userOneID],
       chats: [chatID]
+    },
+    {
+      _id: userThreeID,
+      authId: 'g7h8i9',
+      username: 'test user three',
+      friends: [userOneID]
     }
   )
-  // Create messages in chat
+  /* MESSAGES */
   await Message.create({
     _id: messageOneID,
     sender: userOneID,
@@ -45,7 +56,7 @@ beforeAll(async () => {
     chatId: chatID,
     timestamp: new Date()
   })
-  // Create chat
+  /* CHAT */
   await Chat.create({
     _id: chatID,
     owner: userOneID,
@@ -60,17 +71,29 @@ afterAll(async () => {
 })
 
 describe('Chat Routes', () => {
-  test('test route', async () => {
-    const res = await request(app).get('/api/v1/chats/hello')
-
-    expect(res.status).toBe(200)
-    expect(res.body.msg).toMatch(/world/i)
-  })
-
   test('GET /id: should return a chat', async () => {
     const res = await request(app).get(`/api/v1/chats/${chatID}`)
 
     expect(res.status).toBe(200)
-    expect(res.body).toHaveProperty('owner', userOneID.toString())
+    expect(res.body.chat).toHaveProperty('owner', userOneID.toString())
+    expect(res.body.chat.messages).toHaveLength(1)
   })
+
+  test('POST should create a chat if users are already friends', async () => {
+    const body = {
+      ownerID: userThreeID,
+      recipientsID: [userOneID] // recipient or to?
+    }
+
+    // User three creates a chat with user One
+    const res = await request(app).post('/api/v1/chats').send(body)
+
+    expect(res.status).toBe(201)
+    expect(res.body.newChat).toHaveProperty('owner', userThreeID.toHexString())
+  })
+
+  // TODO: Implement these tests.
+  // test('POST should throw error when no user with provided owner id exists', async () => {})
+  // test('POST should throw error when user has no friends with which to start a chat', async () => {})
+  // test('POST should throw and error when provided recipients are not friends with owner', async () => {})
 })
