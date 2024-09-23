@@ -22,6 +22,8 @@
     "mongoose": "^8.6.2"
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watchAll",
     "start": "ts-node server.ts"

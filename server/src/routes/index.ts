@@ -1,5 +1,4 @@
-import userRoutes from '../routes/userRoutes';
+import userRoutes from '../routes/userRoutes'
+import chatRoutes from './chatRoutes'
 
-module.exports = {
-    userRoutes
-}
+export { userRoutes, chatRoutes }
