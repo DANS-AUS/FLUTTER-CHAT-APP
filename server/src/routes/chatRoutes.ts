@@ -3,6 +3,7 @@ import { Chat, User } from '../models'
 import { HydratedDocument } from 'mongoose'
 import { IChat, IUser } from '../interfaces'
 
+// TODO: Extract this to its own file.
 class CustomError extends Error {
   constructor(public message: string, public statusCode: number) {
     super(message)
@@ -40,13 +41,14 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     // TODO: create an interface to shape this data?
     const { ownerID, recipientsID } = req.body
 
+    // TODO: Convert to middleware. CreateChatMiddleware
+    // Create UTIL function called ValidateUser to ensure that the user exists.
+    // Call this in the middleware.
     const owner: HydratedDocument<IUser> | null = await User.findById(ownerID)
-
     // Throw error if no user with id of ownerID exists.
     if (!owner) {
       throw new CustomError(`No User with provided ID: ${ownerID}`, 404)
     }
-
     // Check if the user has friends to start a chat with
     if (owner!.friends!.length < 1 && owner!.pendingFriends!.length < 1) {
       throw new CustomError(
@@ -98,6 +100,7 @@ const ValidateFriendship = (
 ): Error | null => {
   let friendsOfOwner = new Set(owner.friends!)
 
+  // TODO: Add validation to check the users pending friends.
   for (let recipient of recipients) {
     if (!friendsOfOwner.has(recipient._id)) {
       return new Error(
