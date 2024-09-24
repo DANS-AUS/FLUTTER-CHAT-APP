@@ -7,6 +7,9 @@
 
     /* Modules */
     "module": "commonjs",                                /* Specify what module code is generated. */
+    
+    /* Emit */
+    "outDir": "./dist",                                  /* Specify an output folder for all emitted files. */
 
     /* Interop Constraints */
     "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
