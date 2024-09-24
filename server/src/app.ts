@@ -1,5 +1,5 @@
 require('dotenv').config()
-import express, { Express } from 'express'
+import express, { Express, NextFunction, Request, Response } from 'express'
 import cors from 'cors'
 import { auth } from 'express-oauth2-jwt-bearer'
 import { chatRoutes, userRoutes } from './routes'

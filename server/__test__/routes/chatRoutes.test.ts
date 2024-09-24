@@ -92,8 +92,21 @@ describe('Chat Routes', () => {
     expect(res.body.newChat).toHaveProperty('owner', userThreeID.toHexString())
   })
 
+  test('POST should throw error when no user with provided owner id exists', async () => {
+    const fakeUser = new Types.ObjectId()
+    const body = {
+      ownerID: fakeUser,
+      recipientsID: [userOneID]
+    }
+    const res = await request(app).post('/api/v1/chats').send(body)
+
+    expect(res.error).toBeInstanceOf(Error)
+    expect(res.status).toBe(404)
+    expect(res.body.error).toMatch(
+      new RegExp(`no user with provided id: ${fakeUser.toString()}`, 'i')
+    )
+  })
   // TODO: Implement these tests.
-  // test('POST should throw error when no user with provided owner id exists', async () => {})
   // test('POST should throw error when user has no friends with which to start a chat', async () => {})
   // test('POST should throw and error when provided recipients are not friends with owner', async () => {})
 })

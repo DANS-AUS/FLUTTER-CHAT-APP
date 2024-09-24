@@ -3,6 +3,12 @@ import { Chat, User } from '../models'
 import { HydratedDocument } from 'mongoose'
 import { IChat, IUser } from '../interfaces'
 
+class CustomError extends Error {
+  constructor(public message: string, public statusCode: number) {
+    super(message)
+  }
+}
+
 const router: Router = express.Router()
 
 router.get(
@@ -25,11 +31,11 @@ router.get(
 )
 
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
-  // Validate that users are friends?
-  // Validate that users don't already have a chat?
-  // Create the chat
-  // Set the owner
-  // add the chat ID to the users
+  // [X] Validate that users are friends?
+  // [] Validate that users don't already have a chat?
+  // [X] Create the chat
+  // [X] Set the owner
+  // [] Add the chat ID to the users
   try {
     // TODO: create an interface to shape this data?
     const { ownerID, recipientsID } = req.body
@@ -38,13 +44,14 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
     // Throw error if no user with id of ownerID exists.
     if (!owner) {
-      throw new Error(`No User with provided ID: ${ownerID}`)
+      throw new CustomError(`No User with provided ID: ${ownerID}`, 404)
     }
 
     // Check if the user has friends to start a chat with
     if (owner!.friends!.length < 1 && owner!.pendingFriends!.length < 1) {
-      throw new Error(
-        `No friends or pending friends for provided ownerID: ${ownerID}`
+      throw new CustomError(
+        `No friends or pending friends for provided ownerID: ${ownerID}`,
+        400
       )
     }
 
@@ -70,8 +77,11 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
     res.status(201).json({ newChat })
   } catch (err) {
-    console.log(err)
-    next(err)
+    if (err instanceof CustomError) {
+      res.status(err.statusCode).json({ error: err.message })
+    } else {
+      next(err)
+    }
   }
 })
 
