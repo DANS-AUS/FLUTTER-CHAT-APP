@@ -1,20 +1,7 @@
-import { Request, Response, NextFunction } from 'express'
+import { Response, NextFunction } from 'express'
 import { ValidateUser } from '../utils/functions'
 import { CustomError } from '../utils/classes'
-import { HydratedDocument, Types } from 'mongoose'
-import { IUser } from '../interfaces'
-
-interface CustomRequest extends Request {
-  validatedUsers?: {
-    owner: HydratedDocument<IUser>
-    recipients: HydratedDocument<IUser>[]
-  }
-}
-
-interface body {
-  ownerID: Types.ObjectId
-  recipientsID: Types.ObjectId[]
-}
+import { CustomRequest, body } from '../utils/interfaces'
 
 export const validateUsersMiddleware = async (
   req: CustomRequest,

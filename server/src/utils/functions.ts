@@ -7,6 +7,7 @@ import { CustomError } from './classes'
  * Use to validate that each user in a given array
  * exists in the database.
  *
+ * @param Types.ObjectId[]
  */
 export const ValidateUser = async (ids: Types.ObjectId[]) => {
   // TODO: Need to figure out best way to validate users AND pass them

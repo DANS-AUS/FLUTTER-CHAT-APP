@@ -1,17 +1,11 @@
 import express, { NextFunction, Request, Response, Router } from 'express'
-import { Chat, User } from '../models'
+import { Chat } from '../models'
 import { HydratedDocument } from 'mongoose'
-import { IChat, IUser } from '../interfaces'
+import { IChat } from '../interfaces'
 import { validateUsersMiddleware } from '../middleware/validateUsersMiddleware'
 import { ValidateFriendship } from '../utils/functions'
 import { CustomError } from '../utils/classes'
-
-interface CustomRequest extends Request {
-  validatedUsers?: {
-    owner: HydratedDocument<IUser>
-    recipients: HydratedDocument<IUser>[]
-  }
-}
+import { CustomRequest } from '../utils/interfaces'
 
 const router: Router = express.Router()
 
