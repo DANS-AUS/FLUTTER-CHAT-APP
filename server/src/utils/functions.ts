@@ -32,6 +32,7 @@ export const ValidateFriendship = (
   owner: HydratedDocument<IUser>,
   recipients: HydratedDocument<IUser>[]
 ) => {
+  // TODO: Clean this up? conversion of objectIds is required for use in the set
   let idsToString = owner.friends!.map((friend) => friend.toString())
   let friendsOfOwner = new Set(idsToString)
 

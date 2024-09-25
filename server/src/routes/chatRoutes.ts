@@ -47,14 +47,6 @@ router.post(
       // TODO: create an interface to shape this data?
       const { owner, recipients } = req.validatedUsers!
 
-      // // TODO: Convert to middleware. CreateChatMiddleware
-      // // Create UTIL function called ValidateUser to ensure that the user exists.
-      // // Call this in the middleware.
-      // const owner: HydratedDocument<IUser> | null = await User.findById(ownerID)
-      // // Throw error if no user with id of ownerID exists.
-      // if (!owner) {
-      //   throw new CustomError(`No User with provided ID: ${ownerID}`, 404)
-      // }
       // Check if the user has friends to start a chat with
       if (owner!.friends!.length < 1 && owner!.pendingFriends!.length < 1) {
         throw new CustomError(
@@ -63,22 +55,10 @@ router.post(
         )
       }
 
-      // let recipients: HydratedDocument<IUser>[] = []
-
-      // for (const id of recipientsID) {
-      //   const user: HydratedDocument<IUser> | null = await User.findById(id)
-      //   if (user) {
-      //     recipients.push(user)
-      //   }
-      //   // TODO: Handle user not existing in the DB.
-      // }
-
       // TODO: Need to separate logic into if users are
       // - [ ] Friends
       // - [ ] Pending Friends
 
-      // TODO: Erroring here!
-      // Test to create is failing incorrectly checking the users friends.
       ValidateFriendship(owner!, recipients)
 
       const newChat = await Chat.create({
