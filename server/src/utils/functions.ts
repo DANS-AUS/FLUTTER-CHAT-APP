@@ -40,9 +40,10 @@ export const ValidateFriendship = (
   // TODO: Add validation to check the users pending friends.
   for (let recipient of recipients) {
     if (!friendsOfOwner.has(recipient._id.toString())) {
-      throw new Error(
-        `Provided recipient is not a friend of provided owner: ${recipient._id}`
-      );
+      throw new CustomError(
+        `Provided recipient is not a friend of provided owner: ${recipient._id}`,
+        400
+      )
     }
   }
 };

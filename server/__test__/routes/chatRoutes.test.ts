@@ -17,6 +17,7 @@ jest.mock('express-oauth2-jwt-bearer', () => ({
 const userOneID = new Types.ObjectId()
 const userTwoID = new Types.ObjectId()
 const userThreeID = new Types.ObjectId()
+const userFourID = new Types.ObjectId()
 const chatID = new Types.ObjectId()
 const messageOneID = new Types.ObjectId()
 
@@ -46,6 +47,11 @@ beforeAll(async () => {
       authId: 'g7h8i9',
       username: 'test user three',
       friends: [userOneID]
+    },
+    {
+      _id: userFourID,
+      authId: '1a2b3c',
+      username: 'test user four'
     }
   )
   /* MESSAGES */
@@ -106,7 +112,40 @@ describe('Chat Routes', () => {
       new RegExp(`no user with provided id: ${fakeUser.toString()}`, 'i')
     )
   })
-  // TODO: Implement these tests.
-  // test('POST should throw error when user has no friends with which to start a chat', async () => {})
-  // test('POST should throw and error when provided recipients are not friends with owner', async () => {})
+
+  test('POST should throw error when user has no friends with which to start a chat', async () => {
+    const body = {
+      ownerID: userFourID,
+      recipientsID: [userThreeID]
+    }
+
+    const res = await request(app).post('/api/v1/chats').send(body)
+
+    expect(res.error).toBeInstanceOf(Error)
+    expect(res.status).toBe(400)
+    expect(res.body.error).toMatch(
+      new RegExp(
+        `no friends or pending friends for provided ownerID: ${userFourID.toString()}`,
+        'i'
+      )
+    )
+  })
+
+  test('POST should throw and error when provided recipients are not friends with owner', async () => {
+    const body = {
+      ownerID: userTwoID,
+      recipientsID: [userThreeID]
+    }
+
+    const res = await request(app).post('/api/v1/chats').send(body)
+
+    expect(res.error).toBeInstanceOf(Error)
+    expect(res.status).toBe(400)
+    expect(res.body.error).toMatch(
+      new RegExp(
+        `provided recipient is not a friend of provided owner: ${userThreeID.toString()}`,
+        'i'
+      )
+    )
+  })
 })
