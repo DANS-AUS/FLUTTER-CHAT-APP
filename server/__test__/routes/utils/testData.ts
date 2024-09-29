@@ -4,6 +4,9 @@ import { Chat, Message, User } from "../../../src/models";
 export const testIDs = {
   users: {
     userOneID: new Types.ObjectId(),
+    userTwoID: new Types.ObjectId(),
+    userThreeID: new Types.ObjectId(),
+    userFourID: new Types.ObjectId(),
   },
   chats: {
     chatOneID: new Types.ObjectId(),
@@ -30,7 +33,23 @@ const createUsers = async () => {
       authId: "pjf564",
       username: "test user one",
       chats: [testIDs.chats.chatOneID, testIDs.chats.chatTwoID],
-    }
+    }, 
+    {
+      _id: testIDs.users.userTwoID,
+      authId: "gjl454",
+      username: "test user two",
+    }, 
+    {
+      _id: testIDs.users.userThreeID,
+      authId: "tdk453",
+      username: "test user three",
+    }, 
+    {
+      _id: testIDs.users.userFourID,
+      authId: "s0493h",
+      username: "test user four",
+    }, 
+
   );
 };
 

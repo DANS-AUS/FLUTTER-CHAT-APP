@@ -1,8 +1,9 @@
 import express, { Request, Response, Router, NextFunction } from "express";
-import { IChat, IUser } from "../interfaces";
+import { IChat, INotification, IUser } from "../interfaces";
 import { HydratedDocument } from "mongoose";
-import { User } from "../models";
+import { User, Notification } from "../models";
 import { SelectLatestMessages } from "../utils/functions";
+import { Notification_Type } from "../enums/Notification_Type";
 
 const router: Router = Router();
 
@@ -81,4 +82,54 @@ router.get(
     }
   }
 );
+
+// PUT (update) a new user
+router.put(
+  "/:authId/newUser",
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { authId } = req.params;
+      // update the user
+      const user: HydratedDocument<IUser> | null = await User.findOneAndUpdate(
+        { authId: authId },
+        req.body,
+        { new: true }
+      );
+
+      if (user) {
+        // explicitly update the new user boolean to false
+        user.newUser = false;
+        user.save();
+
+        // send notifications to all pending friends
+        if (user.pendingFriends && user.pendingFriends?.length > 0) {
+          for (const friend of user.pendingFriends) {
+            // create notification
+            const notification: HydratedDocument<INotification> =
+              await Notification.create({
+                notificationType: Notification_Type.FRIEND_REQUEST,
+                to: friend,
+                from: user._id,
+                resolved: false,
+              });
+
+            // adding notification to friends notification list
+            if (notification) {
+              await User.findOneAndUpdate(
+                { _id: friend },
+                {
+                  $push: { notifications: notification._id },
+                }
+              );
+            }
+          }
+        }
+      }
+      res.sendStatus(200);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 export default router;
