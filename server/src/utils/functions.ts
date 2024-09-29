@@ -28,6 +28,7 @@ export const ValidateUser = async (ids: Types.ObjectId[]) => {
 //   pendingFriends: HydratedDocument<IUser>[]
 // }
 
+
 /**
  *  Use to validate that the provided owner of a new chat is in fact friends
  *  with the users provided.
