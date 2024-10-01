@@ -18,6 +18,7 @@ const userOneID = new Types.ObjectId()
 const userTwoID = new Types.ObjectId()
 const userThreeID = new Types.ObjectId()
 const userFourID = new Types.ObjectId()
+const userFiveID = new Types.ObjectId()
 const chatID = new Types.ObjectId()
 const messageOneID = new Types.ObjectId()
 
@@ -33,6 +34,7 @@ beforeAll(async () => {
       authId: 'a1b2c3',
       username: 'test user one',
       friends: [userTwoID, userThreeID],
+      pendingFriends: [userFiveID],
       chats: [chatID]
     },
     {
@@ -52,6 +54,12 @@ beforeAll(async () => {
       _id: userFourID,
       authId: '1a2b3c',
       username: 'test user four'
+    },
+    {
+      _id: userFiveID,
+      authId: '4d5e6f',
+      username: 'test user five',
+      pendingFriends: [userOneID]
     }
   )
   /* MESSAGES */
@@ -77,75 +85,104 @@ afterAll(async () => {
 })
 
 describe('Chat Routes', () => {
-  test('GET /id: should return a chat', async () => {
-    const res = await request(app).get(`/api/v1/chats/${chatID}`)
+  describe('Successful Requests', () => {
+    test('GET /id: should return a chat', async () => {
+      const res = await request(app).get(`/api/v1/chats/${chatID}`)
 
-    expect(res.status).toBe(200)
-    expect(res.body.chat).toHaveProperty('owner', userOneID.toString())
-    expect(res.body.chat.messages).toHaveLength(1)
-  })
+      expect(res.status).toBe(200)
+      expect(res.body.chat).toHaveProperty('owner', userOneID.toString())
+      expect(res.body.chat.messages).toHaveLength(1)
+    })
 
-  test('POST should create a chat if users are already friends', async () => {
-    const body = {
-      ownerID: userThreeID,
-      recipientsID: [userOneID] // recipient or to?
-    }
+    test('POST should create a chat if users are already friends', async () => {
+      const body = {
+        ownerID: userThreeID,
+        recipientsID: [userOneID] // recipient or to?
+      }
 
-    // User three creates a chat with user One
-    const res = await request(app).post('/api/v1/chats').send(body)
+      // User three creates a chat with user One
+      const res = await request(app).post('/api/v1/chats').send(body)
 
-    expect(res.status).toBe(201)
-    expect(res.body.newChat).toHaveProperty('owner', userThreeID.toHexString())
-  })
-
-  test('POST should throw error when no user with provided owner id exists', async () => {
-    const fakeUser = new Types.ObjectId()
-    const body = {
-      ownerID: fakeUser,
-      recipientsID: [userOneID]
-    }
-    const res = await request(app).post('/api/v1/chats').send(body)
-
-    expect(res.error).toBeInstanceOf(Error)
-    expect(res.status).toBe(404)
-    expect(res.body.error).toMatch(
-      new RegExp(`no user with provided id: ${fakeUser.toString()}`, 'i')
-    )
-  })
-
-  test('POST should throw error when user has no friends with which to start a chat', async () => {
-    const body = {
-      ownerID: userFourID,
-      recipientsID: [userThreeID]
-    }
-
-    const res = await request(app).post('/api/v1/chats').send(body)
-
-    expect(res.error).toBeInstanceOf(Error)
-    expect(res.status).toBe(400)
-    expect(res.body.error).toMatch(
-      new RegExp(
-        `no friends or pending friends for provided ownerID: ${userFourID.toString()}`,
-        'i'
+      expect(res.status).toBe(201)
+      expect(res.body.newChat).toHaveProperty(
+        'owner',
+        userThreeID.toHexString()
       )
-    )
+
+      // TODO: Finish these assertions.
+      // Users should have the chats added to their chats field.
+      const userOne = await User.findById(userOneID)
+      console.log(userOne)
+    })
+
+    test('POST should create a chat if users are pending friends', async () => {
+      const body = {
+        ownerID: userOneID,
+        recipientsID: [userFiveID]
+      }
+
+      const res = await request(app).post('/api/v1/chats').send(body)
+
+      expect(res.status).toBe(201)
+      expect(res.body.newChat).toHaveProperty('owner', userOneID.toString())
+
+      // TODO: Finish these assertions.
+      // Users should have the chats added to their chats field.
+      const userOne = await User.findById(userOneID)
+      console.log(userOne)
+    })
   })
 
-  test('POST should throw and error when provided recipients are not friends with owner', async () => {
-    const body = {
-      ownerID: userTwoID,
-      recipientsID: [userThreeID]
-    }
+  describe('Error Requests', () => {
+    test('POST should throw error when no user with provided owner id exists', async () => {
+      const fakeUser = new Types.ObjectId()
+      const body = {
+        ownerID: fakeUser,
+        recipientsID: [userOneID]
+      }
+      const res = await request(app).post('/api/v1/chats').send(body)
 
-    const res = await request(app).post('/api/v1/chats').send(body)
-
-    expect(res.error).toBeInstanceOf(Error)
-    expect(res.status).toBe(400)
-    expect(res.body.error).toMatch(
-      new RegExp(
-        `provided recipient is not a friend of provided owner: ${userThreeID.toString()}`,
-        'i'
+      expect(res.error).toBeInstanceOf(Error)
+      expect(res.status).toBe(404)
+      expect(res.body.error).toMatch(
+        new RegExp(`no user with provided id: ${fakeUser.toString()}`, 'i')
       )
-    )
+    })
+
+    test('POST should throw error when user has no friends with which to start a chat', async () => {
+      const body = {
+        ownerID: userFourID,
+        recipientsID: [userThreeID]
+      }
+
+      const res = await request(app).post('/api/v1/chats').send(body)
+
+      expect(res.error).toBeInstanceOf(Error)
+      expect(res.status).toBe(400)
+      expect(res.body.error).toMatch(
+        new RegExp(
+          `no friends or pending friends for provided ownerID: ${userFourID.toString()}`,
+          'i'
+        )
+      )
+    })
+
+    test('POST should throw and error when provided recipients are not friends with owner', async () => {
+      const body = {
+        ownerID: userTwoID,
+        recipientsID: [userThreeID]
+      }
+
+      const res = await request(app).post('/api/v1/chats').send(body)
+
+      expect(res.error).toBeInstanceOf(Error)
+      expect(res.status).toBe(400)
+      expect(res.body.error).toMatch(
+        new RegExp(
+          `provided recipient is not a friend of provided owner: ${userThreeID.toString()}`,
+          'i'
+        )
+      )
+    })
   })
 })

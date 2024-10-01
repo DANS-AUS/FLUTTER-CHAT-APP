@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response, Router } from 'express'
-import { Chat } from '../models'
+import { Chat, User } from '../models'
 import { HydratedDocument } from 'mongoose'
 import { IChat } from '../interfaces'
 import { validateUsersMiddleware } from '../middleware/validateUsersMiddleware'
@@ -32,13 +32,10 @@ router.post(
   '/',
   validateUsersMiddleware,
   async (req: CustomRequest, res: Response, next: NextFunction) => {
-    // [X] Validate that users are friends?
+    // TODO: Implement the following:
     // [] Validate that users don't already have a chat?
-    // [X] Create the chat
-    // [X] Set the owner
     // [] Add the chat ID to the users
     try {
-      // TODO: create an interface to shape this data?
       const { owner, recipients } = req.validatedUsers!
 
       // Check if the user has friends to start a chat with
@@ -49,16 +46,29 @@ router.post(
         )
       }
 
-      // TODO: Need to separate logic into if users are
-      // - [ ] Friends
-      // - [ ] Pending Friends
-
-      ValidateFriendship(owner!, recipients)
+      const { friends, pendingFriends } = ValidateFriendship(owner!, recipients)
 
       const newChat = await Chat.create({
         owner: owner._id,
         receivers: [...recipients]
       })
+
+      // TODO: Assign the chat to all recipients.
+      // Need to distinguish friends from pending friends.
+      const friendsIDs = [owner._id, ...friends.map((friend) => friend._id)]
+      const pendingFriendsIDs = pendingFriends.map(
+        (pendingFriend) => pendingFriend._id
+      )
+
+      await User.updateMany(
+        { _id: { $in: friendsIDs } },
+        { $push: { chats: newChat._id } }
+      )
+
+      await User.updateMany(
+        { _id: { $in: pendingFriendsIDs } },
+        { $push: { pendingChats: newChat._id } }
+      )
 
       res.status(201).json({ newChat })
     } catch (err) {
