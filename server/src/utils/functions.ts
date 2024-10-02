@@ -10,8 +10,6 @@ import { CustomError } from './classes'
  * @param Types.ObjectId[]
  */
 export const ValidateUser = async (ids: Types.ObjectId[]) => {
-  // TODO: Need to figure out best way to validate users AND pass them
-  // to the controller.
   let users: HydratedDocument<IUser>[] = []
 
   for (let id of ids) {
@@ -25,6 +23,11 @@ export const ValidateUser = async (ids: Types.ObjectId[]) => {
   return users
 }
 
+// export interface ValidatedFriends {
+//   friends: HydratedDocument<IUser>[]
+//   pendingFriends: HydratedDocument<IUser>[]
+// }
+
 /**
  *  Use to validate that the provided owner of a new chat is in fact friends
  *  with the users provided.
@@ -33,16 +36,33 @@ export const ValidateFriendship = (
   owner: HydratedDocument<IUser>,
   recipients: HydratedDocument<IUser>[]
 ) => {
-  // TODO: Clean this up? conversion of objectIds is required for use in the set
-  let idsToString = owner.friends!.map((friend) => friend.toString())
-  let friendsOfOwner = new Set(idsToString)
+  // TODO: Clean this up? conversion of objectIds is required for use in the set.
+  let friendIdsToString = owner.friends?.map((friend) => friend.toString())
+  let friendsOfOwner = new Set(friendIdsToString)
 
-  // TODO: Add validation to check the users pending friends.
+  let pendingIdsToString = owner.pendingFriends?.map((pendingFriend) =>
+    pendingFriend.toString()
+  )
+  let pendingFriendsOfOwner = new Set(pendingIdsToString)
+
+  let friendsArr: HydratedDocument<IUser>[] = []
+  let pendingFriendsArr: HydratedDocument<IUser>[] = []
+
   for (let recipient of recipients) {
-    if (!friendsOfOwner.has(recipient._id.toString())) {
-      throw new Error(
-        `Provided recipient is not a friend of provided owner: ${recipient._id}`
+    if (friendsOfOwner.has(recipient._id.toString())) {
+      friendsArr.push(recipient)
+    } else if (pendingFriendsOfOwner.has(recipient._id.toString())) {
+      pendingFriendsArr.push(recipient)
+    } else {
+      throw new CustomError(
+        `Provided recipient is not a friend of provided owner: ${recipient._id}`,
+        400
       )
     }
+  }
+
+  return {
+    friends: friendsArr,
+    pendingFriends: pendingFriendsArr
   }
 }
