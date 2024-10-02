@@ -14,13 +14,16 @@ jest.mock('express-oauth2-jwt-bearer', () => ({
 }))
 
 // IDs for quick access.
+/* USERS */
 const userOneID = new Types.ObjectId()
 const userTwoID = new Types.ObjectId()
 const userThreeID = new Types.ObjectId()
 const userFourID = new Types.ObjectId()
 const userFiveID = new Types.ObjectId()
 const userSixID = new Types.ObjectId()
+/* CHATS */
 const chatID = new Types.ObjectId()
+/* MESSAGES */
 const messageOneID = new Types.ObjectId()
 
 // Set up in-memory db before each test.
