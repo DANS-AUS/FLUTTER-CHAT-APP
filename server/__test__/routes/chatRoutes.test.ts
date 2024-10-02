@@ -127,12 +127,14 @@ describe('Chat Routes', () => {
       expect(owner!.chats!.map((chat) => chat._id.toString())).toEqual([
         newChatID
       ])
+      expect(owner!.pendingChats!.length).toBe(0)
       // Recipient assertions. [userOneID]
       expect(recipient!.chats!.length).toBe(2)
       expect(recipient!.chats!.map((chat) => chat._id.toString())).toEqual([
         chatID.toString(),
         newChatID
       ])
+      expect(recipient!.pendingChats!.length).toBe(0)
     })
 
     // Summation:
@@ -162,11 +164,13 @@ describe('Chat Routes', () => {
       expect(owner!.chats!.map((chat) => chat._id.toString())).toEqual([
         newChatID
       ])
+      expect(owner!.pendingChats!.length).toBe(0)
       // Pending recipient assertions. [userFiveID]
       expect(pendingRecipient!.pendingChats!.length).toBe(1)
       expect(
         pendingRecipient!.pendingChats!.map((chat) => chat._id.toString())
       ).toEqual([newChatID])
+      expect(pendingRecipient!.chats!.length).toBe(0)
     })
   })
 
