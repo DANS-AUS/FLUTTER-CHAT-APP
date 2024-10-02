@@ -56,19 +56,24 @@ router.post(
       // TODO: Assign the chat to all recipients.
       // Need to distinguish friends from pending friends.
       const friendsIDs = [owner._id, ...friends.map((friend) => friend._id)]
-      const pendingFriendsIDs = pendingFriends.map(
-        (pendingFriend) => pendingFriend._id
-      )
 
       await User.updateMany(
         { _id: { $in: friendsIDs } },
         { $push: { chats: newChat._id } }
       )
 
-      await User.updateMany(
-        { _id: { $in: pendingFriendsIDs } },
-        { $push: { pendingChats: newChat._id } }
-      )
+      // If chat is sent to pending friends, assign the new chat id to the
+      // pending chat field.
+      if (pendingFriends.length > 0) {
+        const pendingFriendsIDs = pendingFriends.map(
+          (pendingFriend) => pendingFriend._id
+        )
+
+        await User.updateMany(
+          { _id: { $in: pendingFriendsIDs } },
+          { $push: { pendingChats: newChat._id } }
+        )
+      }
 
       res.status(201).json({ newChat })
     } catch (err) {
