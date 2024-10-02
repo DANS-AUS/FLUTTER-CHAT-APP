@@ -91,6 +91,9 @@ afterAll(async () => {
 })
 
 describe('Chat Routes', () => {
+  // TODO: Create a test that validates creation of chat with 2+ people
+  // TODO: Create a test that validates creation of chat with 2+ people where at least
+  // one person is a pending friend with the owner
   describe('Successful Requests', () => {
     test('GET /id: should return a chat', async () => {
       const res = await request(app).get(`/api/v1/chats/${chatID}`)
