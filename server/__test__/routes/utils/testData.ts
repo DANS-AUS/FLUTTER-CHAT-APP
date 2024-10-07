@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { Chat, Message, User } from "../../../src/models";
+import { Chat, Message, User, Notification } from "../../../src/models";
 
 export const testIDs = {
   users: {
@@ -27,6 +27,7 @@ export const createTestData = async () => {
   await createUsers();
   await createMessages();
   await createChats();
+  await createNotifications();
 };
 
 const createUsers = async () => {
@@ -106,3 +107,9 @@ const createChats = async () => {
         },
     )
 };
+
+const createNotifications = async () => {
+  await Notification.create(
+
+  )
+}

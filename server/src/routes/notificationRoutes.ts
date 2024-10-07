@@ -34,7 +34,7 @@ router.post(
       fromUser.pendingFriends!.push(toUser._id);
       await fromUser.save();
 
-      res.status(200);
+      res.sendStatus(200);
     } catch (err) {
       if (err instanceof CustomError) {
         res.status(err.statusCode).json({ error: err.message });
