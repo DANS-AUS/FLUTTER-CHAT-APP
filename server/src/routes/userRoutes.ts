@@ -1,28 +1,26 @@
-import express, { Request, Response, Router, NextFunction } from "express";
-import { IChat, INotification, IUser } from "../interfaces";
+import { Request, Response, Router, NextFunction } from "express";
+import { INotification, IUser } from "../interfaces";
 import { HydratedDocument } from "mongoose";
 import { User, Notification } from "../models";
-import { SelectLatestMessages } from "../utils/functions";
-import { Notification_Type } from "../enums/Notification_Type";
+import { SelectLatestMessages, ValidateSingleUser } from "../utils/functions";
+import { CustomError } from "../utils/classes";
 
 const router: Router = Router();
 
-// GET a user by auth0 user_id
+// GET a user by id
 router.get(
   "/:id",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
-      const user: HydratedDocument<IUser> | null = await User.findOne({
-        authId: id,
-      });
 
-      if (user) {
-        res.status(200).json({ user });
-      } else {
-        res.status(404).send(`No user with id: ${id}`);
-      }
+      const user: HydratedDocument<IUser> = await ValidateSingleUser(id);
+
+      res.status(200).json({ user });
     } catch (err) {
+      if (err instanceof CustomError) {
+        res.status(err.statusCode).json({ error: err.message });
+      }
       next(err);
     }
   }
@@ -49,9 +47,18 @@ router.put(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
-      await User.findOneAndUpdate({ authId: id }, req.body);
+
+      const user: HydratedDocument<IUser> = await ValidateSingleUser(id);
+
+      Object.assign(user, req.body);
+
+      await user.save();
+
       res.sendStatus(200);
     } catch (err) {
+      if (err instanceof CustomError) {
+        res.status(err.statusCode).json({ error: err.message });
+      }
       next(err);
     }
   }
@@ -59,13 +66,16 @@ router.put(
 
 // GET all chats for a user along with the last message sent
 router.get(
-  "/:authId/chats",
+  "/:id/chats",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { authId } = req.params;
-      const user: HydratedDocument<IUser> | null = await User.findOne({
-        authId: authId,
-      })
+      const { id } = req.params;
+      const userValidation: HydratedDocument<IUser> = await ValidateSingleUser(
+        id
+      );
+      const user: HydratedDocument<IUser> | null = await User.findById(
+        userValidation._id
+      )
         .select("chats")
         .populate({
           path: "chats",
@@ -74,10 +84,14 @@ router.get(
             options: { sort: { timestamp: -1 } },
           },
         });
+
       SelectLatestMessages(user);
 
       res.status(200).json({ user });
     } catch (err) {
+      if (err instanceof CustomError) {
+        res.status(err.statusCode).json({ error: err.message });
+      }
       next(err);
     }
   }
@@ -85,13 +99,13 @@ router.get(
 
 // PUT (update) a new user
 router.put(
-  "/:authId/newUser",
+  "/:id/newUser",
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { authId } = req.params;
+      const { id } = req.params;
       // update the user
-      const user: HydratedDocument<IUser> | null = await User.findOneAndUpdate(
-        { authId: authId },
+      const user: HydratedDocument<IUser> | null = await User.findByIdAndUpdate(
+        id,
         req.body,
         { new: true }
       );
@@ -107,7 +121,7 @@ router.put(
             // create notification
             const notification: HydratedDocument<INotification> =
               await Notification.create({
-                notificationType: Notification_Type.FRIEND_REQUEST,
+                notificationType: 1,
                 to: friend,
                 from: user._id,
                 resolved: false,
@@ -131,5 +145,7 @@ router.put(
     }
   }
 );
+
+// TODO: pseudo-delete
 
 export default router;

@@ -2,9 +2,9 @@ import { serverConnect, serverDisconnect } from "../../db/testConfig";
 import { NextFunction, Response } from "express";
 import request from "supertest";
 import app from "../../src/app";
-import { User, Chat, Notification } from "../../src/models";
+import { User } from "../../src/models";
 import { HydratedDocument, Types } from "mongoose";
-import { IChat, IMessage, INotification, IUser } from "../../src/interfaces";
+import { IUser } from "../../src/interfaces";
 import { createTestData, testIDs } from "./utils/testData";
 
 jest.mock("express-oauth2-jwt-bearer", () => ({
@@ -28,7 +28,9 @@ afterAll(async () => {
 
 describe("User Routes", () => {
   test("GET /:id should return a user based on the auth0 id", async () => {
-    const res = await request(app).get("/api/v1/users/pjf564");
+    const res = await request(app).get(
+      `/api/v1/users/${testIDs.users.userOneID}`
+    );
 
     expect(res.status).toBe(200);
     expect(res.body.user.username).toEqual("test user one");
@@ -48,24 +50,23 @@ describe("User Routes", () => {
   });
 
   test("PUT /:id should update a user", async () => {
-    const oldUser: IUser = { authId: "123", username: "oldUserName" };
-    await User.create(oldUser);
-
     const newUserInfo: IUser = { authId: "123", username: "newUserName" };
     const res = await request(app)
-      .put("/api/v1/users/123")
+      .put(`/api/v1/users/${testIDs.users.userFourID}`)
       .send({ ...newUserInfo });
 
-    const userCheck: HydratedDocument<IUser> | null = await User.findOne({
-      authId: oldUser.authId,
-    });
+    const userCheck: HydratedDocument<IUser> | null = await User.findById(
+      testIDs.users.userFourID
+    );
 
     expect(res.status).toBe(200);
     expect(userCheck?.username).toEqual(newUserInfo.username);
   });
 
-  test("GET /:authId/chats gets all the chats for a user and the most recent message for each chat", async () => {
-    const res = await request(app).get("/api/v1/users/pjf564/chats");
+  test("GET /:id/chats gets all the chats for a user and the most recent message for each chat", async () => {
+    const res = await request(app).get(
+      `/api/v1/users/${testIDs.users.userOneID}/chats`
+    );
 
     expect(res.body.user.chats.length).toBe(2);
     expect(res.body.user.chats[0].messages.length).toBe(1);
@@ -78,7 +79,7 @@ describe("User Routes", () => {
     );
   });
 
-  test("PUT /:authId/newUser sends notification to pending friends and updates the new user bool", async () => {
+  test("PUT /:id/newUser sends notification to pending friends and updates the new user bool", async () => {
     const newUserInfo: IUser = {
       authId: "gjl454",
       username: "my new username",
@@ -86,12 +87,10 @@ describe("User Routes", () => {
     };
 
     const res = await request(app)
-      .put("/api/v1/users/gjl454/newUser")
+      .put(`/api/v1/users/${testIDs.users.userTwoID}/newUser`)
       .send({ ...newUserInfo });
 
-    const user: HydratedDocument<IUser> | null = await User.findOne({
-      authId: "gjl454",
-    });
+    const user: HydratedDocument<IUser> | null = await User.findById(testIDs.users.userTwoID);
     expect(res.status).toBe(200);
     expect(user).toBeTruthy();
 
@@ -99,12 +98,12 @@ describe("User Routes", () => {
     expect(user!.pendingFriends!.length).toBe(2);
     expect(user!.newUser).toBeFalsy();
 
-    const userFriendOne: HydratedDocument<IUser> | null = await User.findOne({
-      authId: "tdk453",
-    }).populate({ path: "notifications", select: "from" });
-    const userFriendTwo: HydratedDocument<IUser> | null = await User.findOne({
-      authId: "s0493h",
-    }).populate({ path: "notifications", select: "from" });
+    const userFriendOne: HydratedDocument<IUser> | null = await User.findById(
+      testIDs.users.userThreeID
+    ).populate({ path: "notifications", select: "from" });
+    const userFriendTwo: HydratedDocument<IUser> | null = await User.findById(
+      testIDs.users.userFourID
+    ).populate({ path: "notifications", select: "from" });
 
     expect(userFriendOne!.notifications![0]).toMatchObject({
       from: testIDs.users.userTwoID,

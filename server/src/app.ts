@@ -2,7 +2,7 @@ require('dotenv').config()
 import express, { Express, NextFunction, Request, Response } from 'express'
 import cors from 'cors'
 import { auth } from 'express-oauth2-jwt-bearer'
-import { chatRoutes, userRoutes } from './routes'
+import { chatRoutes, notificationRoutes, userRoutes } from './routes'
 
 const { AUTH0_AUDIENCE, AUTH0_BASE_URL, AUTH0_SIGNING_ALG } = process.env
 
@@ -21,5 +21,6 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/chats', chatRoutes)
+app.use('/api/v1/notifications', notificationRoutes)
 
 export default app

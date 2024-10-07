@@ -1,4 +1,5 @@
-import userRoutes from '../routes/userRoutes'
+import userRoutes from './userRoutes'
 import chatRoutes from './chatRoutes'
+import notificationRoutes from './notificationRoutes'
 
-export { userRoutes, chatRoutes }
+export { userRoutes, chatRoutes, notificationRoutes }

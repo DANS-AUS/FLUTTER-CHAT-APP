@@ -18,6 +18,9 @@ export const testIDs = {
     messageThreeID: new Types.ObjectId(),
     messageFourID: new Types.ObjectId(),
   },
+  notification: {
+    notificationOneID: new Types.ObjectId(),
+  }
 };
 
 export const createTestData = async () => {
